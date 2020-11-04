@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using Encrypted_Structures;
 
 namespace Test_Console
@@ -7,10 +6,33 @@ namespace Test_Console
     class Program
     {
         static void Main(string[] args)
-        {            
+        {
+            Encrypted ruta = new Encrypted();
+            string re = ruta.Route("5,4", "este es un mensaje");
+            Console.WriteLine(re);
+            Console.WriteLine("--------------------------------------");
+            string op = ruta.DecryptedRoute("5,4", re, 18);
+            Console.WriteLine(op);
+            Console.ReadLine();
+                
+            Console.WriteLine("Ejemplo Zig_Zag:");
+            Console.WriteLine("--------------------------------------");
+            Encrypted zig_zag = new Encrypted();
+            string cifrado = zig_zag.Zig_Zag("5", "Cómo estás amigo");
+            Console.WriteLine("Mensaje original: Cómo estás amigo");
+            Console.WriteLine("Mensaje cifrado: " + cifrado);
+            Console.WriteLine("--------------------------------------");
+            string descifrado = zig_zag.Decrypted_Zig_Zag("5", cifrado, 16);
+            Console.WriteLine("El mensaje descifrado es: " + descifrado);
+            Console.WriteLine("--------------------------------------");
+            Console.WriteLine("Presiona cualquier tecla para continuar...");
+            Console.ReadKey();
+            Console.Clear();
+
             bool exit = false;
             while (!exit)
             {
+                Console.WriteLine("EJEMPLO CÉSAR_");
                 Console.WriteLine("Cifrar = 1... Descifrar = 2");
                 int option = int.Parse(Console.ReadLine());
 
@@ -42,7 +64,7 @@ namespace Test_Console
                     string result = cesar.Cesar(key, aDescifrar, 2);
 
                     Console.WriteLine("----------------------------------------------------");
-                    Console.WriteLine("Su mensaje cifrado es:");
+                    Console.WriteLine("Su mensaje descifrado es:");
                     Console.WriteLine(result);
 
                     Console.WriteLine("---Presione cualquier tecla para continuar---");
@@ -57,7 +79,7 @@ namespace Test_Console
                     exit = true;
                 }
                 Console.Clear();
-            }           
+            }
         }
     }
 }
