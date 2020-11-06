@@ -12,99 +12,123 @@ namespace Encryption_API.Controllers
     [ApiController]
     public class api : ControllerBase
     {
-        Encrypted Encrypted = new Encrypted();
+        Encrypted encrypted = new Encrypted();
 
         [HttpPost]
-        [Route("cipher/{method}/{key}")]
-        public async Task<ActionResult> Encryption([FromForm] IFormFile file, string method, string key)
+        [Route("cipher/{method}")]
+        public async Task<ActionResult> Encryption([FromForm] IFormFile file, string method, [FromForm] Key key)
         {
-            string fileName = file.FileName.Remove(file.FileName.Length - 4, 4);
-            string extension = "", auxExtension = "";
-
-            byte[] result = null;
-            using (var memory = new MemoryStream())
+            try
             {
-                await file.CopyToAsync(memory);
-                byte[] byteArray = memory.ToArray();
+                string fileName = file.FileName.Remove(file.FileName.Length - 4, 4);
+                string extension = "", auxExtension = "";
 
-                string message = Encrypted.BytesToString(byteArray); 
-                string resultAux;
-
-                switch (method)
+                byte[] result = null;
+                using (var memory = new MemoryStream())
                 {
-                    case "cesar":                        
-                        resultAux = Encrypted.Cesar(key, message, 1);
-                        result = Encrypted.StringToBytes(resultAux);
-                        extension = "compressedFile / csr";
-                        auxExtension = ".csr";
-                        break;
-                    case "zigzag":
-                        resultAux = Encrypted.Zig_Zag(key, message);
-                        result = Encrypted.StringToBytes_MetaData(resultAux, message.Length);
-                        extension = "compressedFile / zz";
-                        auxExtension = ".zz";
-                        break;
-                    case "ruta":
-                        resultAux = Encrypted.Route(key, message);
-                        result = Encrypted.StringToBytes_MetaData(resultAux, message.Length);
-                        extension = "compressedFile / rt";
-                        auxExtension = ".rt";
-                        break;                    
-                }               
+                    await file.CopyToAsync(memory);
+                    byte[] byteArray = memory.ToArray();
+
+                    string message = encrypted.BytesToString(byteArray);
+                    string resultAux;
+
+                    switch (method)
+                    {
+                        case "César":
+                            resultAux = encrypted.Cesar(key, message, 1);
+                            if (resultAux == "") return StatusCode(500);                            
+                            result = encrypted.StringToBytes(resultAux);
+                            extension = "compressedFile / csr";
+                            auxExtension = ".csr";
+                            break;
+                        case "ZigZag":
+                            resultAux = encrypted.Zig_Zag(key, message);
+                            if (resultAux == "") return StatusCode(500);
+                            result = encrypted.StringToBytes_MetaData(resultAux, message.Length);
+                            extension = "compressedFile / zz";
+                            auxExtension = ".zz";
+                            break;
+                        case "Ruta":
+                            resultAux = encrypted.Route(key, message);
+                            if (resultAux == "") return StatusCode(500);
+                            result = encrypted.StringToBytes_MetaData(resultAux, message.Length);
+                            extension = "compressedFile / rt";
+                            auxExtension = ".rt";
+                            break;
+                    }
+                }
+                Archive response = new Archive
+                {
+                    Content = result,
+                    ContentType = extension,
+                    FileName = fileName
+                };
+                return File(response.Content, response.ContentType, response.FileName + auxExtension);
             }
-            Archive response = new Archive
+            catch (System.Exception)
             {
-                Content = result,
-                ContentType = extension,
-                FileName = fileName
-            };
-            return File(response.Content, response.ContentType, response.FileName + auxExtension);
+                return StatusCode(500);                
+            }            
         }
 
         [HttpPost]
-        [Route("decipher/{method}/{key}")]
-        public async Task<ActionResult> Decoded([FromForm] IFormFile file, string method, string key)
+        [Route("decipher")]
+        public async Task<ActionResult> Decoded([FromForm] IFormFile file, [FromForm] Key key)
         {
-            string fileName = "";
-            byte[] result = null;
-            using (var memory = new MemoryStream())
+            try
             {
-                await file.CopyToAsync(memory);
-                byte[] byteArray = memory.ToArray();
+                string extension = file.FileName.Substring(file.FileName.Length - 3, 3), method;
+                if (extension == ".zz") method = "ZigZag"; else if (extension == ".rt") method = "Ruta"; else method = "César";
 
-                string message;
-                string resultAux;
-                List<int> originalLength = new List<int>();
+                string fileName = "";
+                byte[] result = null;
 
-                switch (method)
+                using (var memory = new MemoryStream())
                 {
-                    case "cesar":
-                        message = Encrypted.BytesToString(byteArray);
-                        resultAux = Encrypted.Cesar(key, message, 2);
-                        result = Encrypted.StringToBytes(resultAux);
-                        fileName = file.FileName.Remove(file.FileName.Length - 4, 4);
-                        break;
-                    case "zigzag":
-                        message = Encrypted.BytesToString_MetaData(byteArray, originalLength);
-                        resultAux = Encrypted.Decrypted_Zig_Zag(key, message, originalLength[0]);
-                        result = Encrypted.StringToBytes(resultAux);
-                        fileName = file.FileName.Remove(file.FileName.Length - 3, 3);
-                        break;
-                    case "ruta":
-                        message = Encrypted.BytesToString_MetaData(byteArray, originalLength);
-                        resultAux = Encrypted.DecryptedRoute(key, message, originalLength[0]);
-                        result = Encrypted.StringToBytes(resultAux);
-                        fileName = file.FileName.Remove(file.FileName.Length - 3, 3);
-                        break;
-                }                
+                    await file.CopyToAsync(memory);
+                    byte[] byteArray = memory.ToArray();
+
+                    string message;
+                    string resultAux;
+                    List<int> originalLength = new List<int>();
+
+                    switch (method)
+                    {
+                        case "César":
+                            message = encrypted.BytesToString(byteArray);
+                            resultAux = encrypted.Cesar(key, message, 2);
+                            if (resultAux == "") return StatusCode(500);
+                            result = encrypted.StringToBytes(resultAux);
+                            fileName = file.FileName.Remove(file.FileName.Length - 4, 4);
+                            break;
+                        case "ZigZag":
+                            message = encrypted.BytesToString_MetaData(byteArray, originalLength);
+                            resultAux = encrypted.Decrypted_Zig_Zag(key, message, originalLength[0]);
+                            if (resultAux == "") return StatusCode(500);
+                            result = encrypted.StringToBytes(resultAux);
+                            fileName = file.FileName.Remove(file.FileName.Length - 3, 3);
+                            break;
+                        case "Ruta":
+                            message = encrypted.BytesToString_MetaData(byteArray, originalLength);
+                            resultAux = encrypted.DecryptedRoute(key, message, originalLength[0]);
+                            if (resultAux == "") return StatusCode(500);
+                            result = encrypted.StringToBytes(resultAux);
+                            fileName = file.FileName.Remove(file.FileName.Length - 3, 3);
+                            break;
+                    }
+                }
+                Archive response = new Archive
+                {
+                    Content = result,
+                    ContentType = "compressedFile / txt",
+                    FileName = fileName
+                };
+                return File(response.Content, response.ContentType, response.FileName + ".txt");
             }
-            Archive response = new Archive
+            catch (System.Exception)
             {
-                Content = result,
-                ContentType = "compressedFile / txt",
-                FileName = fileName
-            };
-            return File(response.Content, response.ContentType, response.FileName + ".txt");
+                return StatusCode(500);                
+            }            
         }
     }
 }

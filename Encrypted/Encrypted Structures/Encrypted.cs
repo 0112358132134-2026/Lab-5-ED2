@@ -11,10 +11,10 @@ namespace Encrypted_Structures
         public List<string>[] listsVector;
         #endregion       
         #region "César"
-        public string Cesar(string key, string message, int type)
+        public string Cesar(Key key, string message, int type)
         {
             bool oka;
-            if (type == 1) oka = FillDictionary(key, 1); else oka = FillDictionary(key, 2);
+            if (type == 1) oka = FillDictionary(key.Word, 1); else oka = FillDictionary(key.Word, 2);
 
             if (oka)
             {
@@ -39,7 +39,7 @@ namespace Encrypted_Structures
             }
             else
             {
-                return "Is not a valid password...";
+                return "";
             }
         }
         public bool Repeated(string key)
@@ -105,9 +105,9 @@ namespace Encrypted_Structures
         }
         #endregion
         #region "Zig_Zag"
-        public string Zig_Zag(string key, string message)
+        public string Zig_Zag(Key key, string message)
         {
-            int keyAux = int.Parse(key);
+            int keyAux = key.Levels;
             if (keyAux >= 2)
             {
                 listsVector = new List<string>[keyAux];
@@ -163,12 +163,12 @@ namespace Encrypted_Structures
             }
             else
             {
-                return "The key must be a number greater than or equal to two...";
+                return "";
             }
         }
-        public string Decrypted_Zig_Zag(string key, string message, int originalLength)
+        public string Decrypted_Zig_Zag(Key key, string message, int originalLength)
         {
-            int keyAux = int.Parse(key);
+            int keyAux = key.Levels;
             if (keyAux >= 2)
             {
                 listsVector = new List<string>[keyAux];
@@ -233,100 +233,114 @@ namespace Encrypted_Structures
             }
             else
             {
-                return "The key must be a number greater than or equal to two...";
+                return "";
             }
         }
         #endregion
         #region "Ruta"
-        public string Route(string key, string message)
+        public string Route(Key key, string message)
         {
-            string[] nxm = key.Split(",");
-            int n = int.Parse(nxm[0]);
-            int m = int.Parse(nxm[1]);
-            string[,] matrix = new string[n,m];
+            int n = key.Rows;
+            int m = key.Columns;
 
-            StringBuilder messageAuxiliar = new StringBuilder();
-            messageAuxiliar.Append(message);
-
-            StringBuilder result = new StringBuilder();
-
-            bool allInserted = false;
-            while (!allInserted)
+            if ((m & n) >= 2)
             {
-                for (int i = 0; i < m; i++)
+                string[,] matrix = new string[n, m];
+
+                StringBuilder messageAuxiliar = new StringBuilder();
+                messageAuxiliar.Append(message);
+
+                StringBuilder result = new StringBuilder();
+
+                bool allInserted = false;
+                while (!allInserted)
                 {
-                    for (int j = 0; j < n; j++)
+                    for (int i = 0; i < m; i++)
                     {
-                        if (messageAuxiliar.Length != 0)
+                        for (int j = 0; j < n; j++)
                         {
-                            matrix[j, i] = messageAuxiliar.ToString(0, 1);
-                            messageAuxiliar.Remove(0, 1);
-                        }
-                        else
-                        {
-                            matrix[j, i] = "$";
+                            if (messageAuxiliar.Length != 0)
+                            {
+                                matrix[j, i] = messageAuxiliar.ToString(0, 1);
+                                messageAuxiliar.Remove(0, 1);
+                            }
+                            else
+                            {
+                                matrix[j, i] = "$";
+                            }
                         }
                     }
-                }
-                for (int i = 0; i < n; i++)
-                {
-                    for (int j = 0; j < m; j++)
+                    for (int i = 0; i < n; i++)
                     {
-                        result.Append(matrix[i, j]);
+                        for (int j = 0; j < m; j++)
+                        {
+                            result.Append(matrix[i, j]);
+                        }
+                    }
+                    if (messageAuxiliar.Length == 0)
+                    {
+                        allInserted = true;
                     }
                 }
-                if (messageAuxiliar.Length == 0)
-                {
-                    allInserted = true;
-                }
+                return result.ToString();
             }
-            return result.ToString();
+            else
+            {
+                return "";
+            }           
         }
-        public string DecryptedRoute(string key, string message, int originalLength)
+        public string DecryptedRoute(Key key, string message, int originalLength)
         {
-            string[] nxm = key.Split(",");
-            int n = int.Parse(nxm[0]);
-            int m = int.Parse(nxm[1]);
-            string[,] matrix = new string[n, m];
+            int n = key.Rows;
+            int m = key.Columns;
 
-            StringBuilder messageAuxiliar = new StringBuilder();
-            messageAuxiliar.Append(message);
-
-            StringBuilder result = new StringBuilder();
-
-            bool allInserted = false;
-            while (!allInserted)
+            if ((m & n) >= 2)
             {
-                for (int i = 0; i < n; i++)
+                string[,] matrix = new string[n, m];
+
+                StringBuilder messageAuxiliar = new StringBuilder();
+                messageAuxiliar.Append(message);
+
+                StringBuilder result = new StringBuilder();
+
+                bool allInserted = false;
+                while (!allInserted)
                 {
-                    for (int j = 0; j < m; j++)
+                    for (int i = 0; i < n; i++)
                     {
-                        if (messageAuxiliar.Length != 0)
+                        for (int j = 0; j < m; j++)
                         {
-                            matrix[i, j] = messageAuxiliar.ToString(0, 1);
-                            messageAuxiliar.Remove(0, 1);
-                        }                        
-                    }
-                }
-                for (int i = 0; i < m; i++)
-                {
-                    for (int j = 0; j < n; j++)
-                    {
-                        if (matrix[j, i] != null)
-                        {
-                            result.Append(matrix[j, i]);
+                            if (messageAuxiliar.Length != 0)
+                            {
+                                matrix[i, j] = messageAuxiliar.ToString(0, 1);
+                                messageAuxiliar.Remove(0, 1);
+                            }
                         }
                     }
+                    for (int i = 0; i < m; i++)
+                    {
+                        for (int j = 0; j < n; j++)
+                        {
+                            if (matrix[j, i] != null)
+                            {
+                                result.Append(matrix[j, i]);
+                            }
+                        }
+                    }
+                    if (messageAuxiliar.Length == 0)
+                    {
+                        allInserted = true;
+                    }
                 }
-                if (messageAuxiliar.Length == 0)
-                {
-                    allInserted = true;
-                }
-            }
 
-            int remove = result.Length - originalLength;
-            result.Remove(result.Length - remove, remove);
-            return result.ToString();
+                int remove = result.Length - originalLength;
+                result.Remove(result.Length - remove, remove);
+                return result.ToString();
+            }
+            else
+            {
+                return "";
+            }            
         }
         #endregion
         #region "Auxiliaries"
@@ -408,7 +422,7 @@ namespace Encrypted_Structures
                 decimals.Add(ConvertBinaryToDecimal(bytes[i]));
             }
             int bytesForMetadata = decimals.Count();
-
+            int countAux = decimals.Count();
             char[] charArray = message.ToCharArray();
             byte[] result = new byte[charArray.Length + 1 + decimals.Count()];
 
@@ -419,7 +433,7 @@ namespace Encrypted_Structures
                 {
                     result[i] = (byte)bytesForMetadata;
                 }
-                else if ((i > 0) && (i <= decimals.Count()))
+                else if ((i > 0) && (i <= countAux))
                 {
                     result[i] = (byte)decimals[0];
                     decimals.RemoveAt(0);
